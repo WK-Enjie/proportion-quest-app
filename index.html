@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0,
+                 maximum-scale=1.0, user-scalable=no" />
+
+  <!-- PWA / Mobile App Meta -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style"
+        content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ProPortion Quest" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#4f8ef7" />
+  <meta name="description"
+        content="A fun two-player math game for learning direct and
+                 inverse proportion. Lower Secondary Mathematics." />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Apple Touch Icon (emoji fallback via SVG) -->
+  <link rel="apple-touch-icon"
+        href="data:image/svg+xml,
+        <svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+          <text y='.9em' font-size='90'>⚖️</text>
+        </svg>" />
+
+  <title>ProPortion Quest 🎮</title>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+
+  <!-- Inline critical styles to prevent FOUC -->
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #1a1a2e;
+      overflow: hidden;
+      height: 100%;
+      width: 100%;
+    }
+    html { height: 100%; }
+
+    /* iOS safe area padding */
+    .game-hud {
+      padding-top: max(8px, env(safe-area-inset-top));
+    }
+    .scroll-content {
+      padding-bottom: max(40px, env(safe-area-inset-bottom));
+    }
+
+    /* Loading screen shown before JS boots */
+    #boot-loader {
+      position: fixed;
+      inset: 0;
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      z-index: 99999;
+      color: white;
+      font-family: system-ui, sans-serif;
+      transition: opacity 0.5s ease;
+    }
+    #boot-loader.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .boot-icon  { font-size: 5rem; }
+    .boot-title {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #f5c842;
+    }
+    .boot-bar-wrap {
+      width: 200px;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .boot-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #4f8ef7, #6c63ff);
+      border-radius: 3px;
+      animation: bootLoad 1.2s ease forwards;
+    }
+    @keyframes bootLoad {
+      from { width: 0%; }
+      to   { width: 100%; }
+    }
+    .boot-sub {
+      font-size: 0.8rem;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     BOOT LOADER (shown while JS initialises)
+═══════════════════════════════════════════════════ -->
+<div id="boot-loader">
+  <div class="boot-icon">⚖️</div>
+  <div class="boot-title">ProPortion Quest</div>
+  <div class="boot-bar-wrap">
+    <div class="boot-bar"></div>
+  </div>
+  <div class="boot-sub">Loading game assets...</div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 1 — SPLASH
+═══════════════════════════════════════════════════ -->
+<div id="screen-splash" class="screen">
+  <div class="splash-bg">
+
+    <!-- Floating math symbols background -->
+    <div class="floating-symbols" aria-hidden="true">
+      <span class="sym" style="--d:0s;   --x:8%;  --size:2rem"  >y∝x</span>
+      <span class="sym" style="--d:0.5s; --x:28%; --size:1.5rem">k=y/x</span>
+      <span class="sym" style="--d:1s;   --x:52%; --size:2.5rem">xy=k</span>
+      <span class="sym" style="--d:1.5s; --x:72%; --size:1.8rem">y=kx²</span>
+      <span class="sym" style="--d:0.3s; --x:88%; --size:1.4rem">∝</span>
+      <span class="sym" style="--d:0.8s; --x:18%; --size:1.6rem">1/x</span>
+      <span class="sym" style="--d:1.2s; --x:62%; --size:1.3rem">√x</span>
+      <span class="sym" style="--d:0.6s; --x:40%; --size:1.2rem">y=kx</span>
+      <span class="sym" style="--d:1.8s; --x:80%; --size:1.5rem">k=xy</span>
+    </div>
+
+    <div class="splash-content">
+      <div class="game-logo">
+        <div class="logo-icon" aria-hidden="true">⚖️</div>
+        <h1 class="logo-title">
+          ProPortion<br>
+          <span class="logo-accent">Quest</span>
+        </h1>
+        <p class="logo-subtitle">
+          Master the Math of Ratios &amp; Relationships
+        </p>
+      </div>
+
+      <div class="splash-buttons">
+        <button class="btn btn-primary btn-xl pulse-btn"
+                id="btn-start-game">
+          ⚔️ Start Battle
+        </button>
+        <button class="btn btn-secondary btn-xl"
+                id="btn-how-to-play">
+          📖 How to Play
+        </button>
+        <button class="btn btn-ghost btn-xl"
+                id="btn-leaderboard-splash">
+          🏆 Leaderboard
+        </button>
+      </div>
+
+      <div class="version-tag">v1.0 · Lower Secondary Math</div>
+    </div>
+
+  </div>
+</div><!-- /screen-splash -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 2 — HOW TO PLAY
+═══════════════════════════════════════════════════ -->
+<div id="screen-howtoplay" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" id="btn-back-htp">← Back</button>
+    <h2>📖 How to Play</h2>
+  </div>
+
+  <div class="scroll-content">
+
+    <div class="htp-card">
+      <div class="htp-icon">👥</div>
+      <h3>Two Players</h3>
+      <p>
+        Player 1 (Student) vs Player 2 (Teacher or Friend).
+        Take turns answering questions to earn points and
+        defeat your opponent!
+      </p>
+    </div>
+
+    <div class="htp-card">
+      <div class="htp-icon">🗺️</div>
+      <h3>5 Worlds · 3 Levels Each</h3>
+      <p>
+        Journey from basic proportion identification all the
+        way to 3-variable challenges. Complete each world to
+        unlock the next!
+      </p>
+    </div>
+
+    <div class="htp-card">
+      <div class="htp-icon">🎡</div>
+      <h3>Spin the Wheel!</h3>
+      <p>
+        Before each question, spin the wheel to get your
+        question type — MCQ, Table, Find k, True/False,
+        Fill in the Blank, or Word Problem!
+      </p>
+    </div>
+
+    <div class="htp-card">
+      <div class="htp-icon">⚡</div>
+      <h3>Power-Ups</h3>
+      <p>
+        ⏰ <strong>Time Freeze</strong> — Get 15 extra seconds<br>
+        💡 <strong>Hint</strong> — Eliminate 2 wrong answers<br>
+        💣 <strong>Double Down</strong> — Double your points<br>
+        🛡️ <strong>Shield</strong> — Block next heart loss
+      </p>
+    </div>
+
+    <div class="htp-card">
+      <div class="htp-icon">🎯</div>
+      <h3>Scoring</h3>
+      <p>
+        ✅ Correct Answer: <strong>+100 to +250 pts</strong><br>
+        ⚡ Speed Bonus: <strong>up to +50 pts</strong><br>
+        🔥 Streak ×2: <strong>2 correct in a row</strong><br>
+        🔥 Streak ×3: <strong>3+ correct in a row</strong><br>
+        ❌ Wrong Answer: <strong>Lose a heart ❤️</strong>
+      </p>
+    </div>
+
+    <div class="htp-card tier-card">
+      <div class="htp-icon">🌍</div>
+      <h3>The 5 Worlds</h3>
+      <div class="tier-list">
+        <div class="tier-item t1">
+          🌱 World 1 — Ratio Realm
+          <span>Basics &amp; Identification</span>
+        </div>
+        <div class="tier-item t2">
+          🪐 World 2 — Proportion Planet
+          <span>Forming Equations</span>
+        </div>
+        <div class="tier-item t3">
+          🌋 World 3 — Variable Volcano
+          <span>Finding Unknown Values</span>
+        </div>
+        <div class="tier-item t4">
+          🏗️ World 4 — Triple Trouble
+          <span>3-Variable Problems</span>
+        </div>
+        <div class="tier-item t5">
+          ⚔️ World 5 — Boss Arena
+          <span>Ultimate Mixed Challenge</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary btn-xl"
+            id="btn-htp-play">
+      Let's Play! 🚀
+    </button>
+
+  </div>
+</div><!-- /screen-howtoplay -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 3 — PLAYER SETUP
+═══════════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" id="btn-back-setup">← Back</button>
+    <h2>👥 Player Setup</h2>
+  </div>
+
+  <div class="scroll-content">
+    <p class="setup-subtitle">
+      Choose your avatars and enter your names!
+    </p>
+
+    <!-- Player 1 -->
+    <div class="player-setup-card p1-card">
+      <h3>🎮 Player 1</h3>
+      <div class="avatar-picker" id="avatar-picker-1"
+           role="group" aria-label="Player 1 avatar">
+        <button class="avatar-btn selected"
+                data-avatar="🧑‍🎓"
+                aria-label="Student avatar">🧑‍🎓</button>
+        <button class="avatar-btn"
+                data-avatar="🦸"
+                aria-label="Hero avatar">🦸</button>
+        <button class="avatar-btn"
+                data-avatar="🧙"
+                aria-label="Wizard avatar">🧙</button>
+        <button class="avatar-btn"
+                data-avatar="🤖"
+                aria-label="Robot avatar">🤖</button>
+        <button class="avatar-btn"
+                data-avatar="🐉"
+                aria-label="Dragon avatar">🐉</button>
+        <button class="avatar-btn"
+                data-avatar="🦊"
+                aria-label="Fox avatar">🦊</button>
+        <button class="avatar-btn"
+                data-avatar="🐼"
+                aria-label="Panda avatar">🐼</button>
+        <button class="avatar-btn"
+                data-avatar="🚀"
+                aria-label="Rocket avatar">🚀</button>
+      </div>
+      <input type="text"
+             id="p1-name"
+             class="name-input"
+             placeholder="Enter Player 1 name…"
+             maxlength="20"
+             autocomplete="off"
+             spellcheck="false" />
+      <div class="role-badge p1-role">🎓 Student</div>
+    </div>
+
+    <!-- VS divider -->
+    <div class="vs-divider" aria-hidden="true">⚔️ VS ⚔️</div>
+
+    <!-- Player 2 -->
+    <div class="player-setup-card p2-card">
+      <h3>🎮 Player 2</h3>
+      <div class="avatar-picker" id="avatar-picker-2"
+           role="group" aria-label="Player 2 avatar">
+        <button class="avatar-btn selected"
+                data-avatar="👩‍🏫"
+                aria-label="Female teacher avatar">👩‍🏫</button>
+        <button class="avatar-btn"
+                data-avatar="🧑‍🏫"
+                aria-label="Teacher avatar">🧑‍🏫</button>
+        <button class="avatar-btn"
+                data-avatar="🧝"
+                aria-label="Elf avatar">🧝</button>
+        <button class="avatar-btn"
+                data-avatar="🦉"
+                aria-label="Owl avatar">🦉</button>
+        <button class="avatar-btn"
+                data-avatar="🐯"
+                aria-label="Tiger avatar">🐯</button>
+        <button class="avatar-btn"
+                data-avatar="🦁"
+                aria-label="Lion avatar">🦁</button>
+        <button class="avatar-btn"
+                data-avatar="🐸"
+                aria-label="Frog avatar">🐸</button>
+        <button class="avatar-btn"
+                data-avatar="⭐"
+                aria-label="Star avatar">⭐</button>
+      </div>
+      <input type="text"
+             id="p2-name"
+             class="name-input"
+             placeholder="Enter Player 2 name…"
+             maxlength="20"
+             autocomplete="off"
+             spellcheck="false" />
+      <div class="role-badge p2-role">🏫 Teacher / Friend</div>
+    </div>
+
+    <button class="btn btn-primary btn-xl"
+            id="btn-go-worldmap">
+      🗺️ Choose World →
+    </button>
+
+  </div>
+</div><!-- /screen-setup -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 4 — WORLD MAP
+═══════════════════════════════════════════════════ -->
+<div id="screen-worldmap" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" id="btn-back-worldmap">← Back</button>
+    <h2>🗺️ World Map</h2>
+    <div class="header-scores">
+      <span id="wm-p1-score" class="mini-score p1-mini">P1: 0</span>
+      <span id="wm-p2-score" class="mini-score p2-mini">P2: 0</span>
+    </div>
+  </div>
+
+  <div class="scroll-content">
+    <div class="world-map-container">
+
+      <!-- World 1 -->
+      <div class="world-node unlocked"
+           id="world-1"
+           data-world="1"
+           role="button"
+           tabindex="0"
+           aria-label="World 1: Ratio Realm">
+        <div class="world-path-line top"></div>
+        <div class="world-bubble">
+          <div class="world-emoji" aria-hidden="true">🌱</div>
+          <div class="world-number">World 1</div>
+          <div class="world-name">Ratio Realm</div>
+          <div class="world-desc">Direct vs Inverse Basics</div>
+          <div class="world-stars" id="stars-1" aria-label="Stars earned">
+            ☆☆☆
+          </div>
+        </div>
+        <div class="level-dots" role="group" aria-label="Levels">
+          <span class="level-dot active"
+                data-level="1"
+                role="button" tabindex="0"
+                aria-label="Level 1">1</span>
+          <span class="level-dot"
+                data-level="2"
+                role="button" tabindex="0"
+                aria-label="Level 2">2</span>
+          <span class="level-dot"
+                data-level="3"
+                role="button" tabindex="0"
+                aria-label="Level 3">3</span>
+        </div>
+        <div class="world-path-line bottom"></div>
+      </div>
+
+      <!-- World 2 -->
+      <div class="world-node locked"
+           id="world-2"
+           data-world="2"
+           role="button"
+           tabindex="0"
+           aria-label="World 2: Proportion Planet (locked)">
+        <div class="world-path-line top"></div>
+        <div class="world-bubble">
+          <div class="world-emoji" aria-hidden="true">🪐</div>
+          <div class="world-number">World 2</div>
+          <div class="world-name">Proportion Planet</div>
+          <div class="world-desc">Forming Equations y=kx</div>
+          <div class="world-stars" id="stars-2">☆☆☆</div>
+        </div>
+        <div class="level-dots">
+          <span class="level-dot" data-level="1">1</span>
+          <span class="level-dot" data-level="2">2</span>
+          <span class="level-dot" data-level="3">3</span>
+        </div>
+        <div class="world-path-line bottom"></div>
+      </div>
+
+      <!-- World 3 -->
+      <div class="world-node locked"
+           id="world-3"
+           data-world="3"
+           role="button"
+           tabindex="0"
+           aria-label="World 3: Variable Volcano (locked)">
+        <div class="world-path-line top"></div>
+        <div class="world-bubble">
+          <div class="world-emoji" aria-hidden="true">🌋</div>
+          <div class="world-number">World 3</div>
+          <div class="world-name">Variable Volcano</div>
+          <div class="world-desc">Finding Unknown Values</div>
+          <div class="world-stars" id="stars-3">☆☆☆</div>
+        </div>
+        <div class="level-dots">
+          <span class="level-dot" data-level="1">1</span>
+          <span class="level-dot" data-level="2">2</span>
+          <span class="level-dot" data-level="3">3</span>
+        </div>
+        <div class="world-path-line bottom"></div>
+      </div>
+
+      <!-- World 4 -->
+      <div class="world-node locked"
+           id="world-4"
+           data-world="4"
+           role="button"
+           tabindex="0"
+           aria-label="World 4: Triple Trouble (locked)">
+        <div class="world-path-line top"></div>
+        <div class="world-bubble">
+          <div class="world-emoji" aria-hidden="true">🏗️</div>
+          <div class="world-number">World 4</div>
+          <div class="world-name">Triple Trouble</div>
+          <div class="world-desc">3-Variable Problems</div>
+          <div class="world-stars" id="stars-4">☆☆☆</div>
+        </div>
+        <div class="level-dots">
+          <span class="level-dot" data-level="1">1</span>
+          <span class="level-dot" data-level="2">2</span>
+          <span class="level-dot" data-level="3">3</span>
+        </div>
+        <div class="world-path-line bottom"></div>
+      </div>
+
+      <!-- World 5 -->
+      <div class="world-node locked"
+           id="world-5"
+           data-world="5"
+           role="button"
+           tabindex="0"
+           aria-label="World 5: Boss Arena (locked)">
+        <div class="world-path-line top"></div>
+        <div class="world-bubble boss-bubble">
+          <div class="world-emoji" aria-hidden="true">⚔️</div>
+          <div class="world-number">World 5</div>
+          <div class="world-name">Boss Arena</div>
+          <div class="world-desc">Ultimate Challenge!</div>
+          <div class="world-stars" id="stars-5">☆☆☆</div>
+        </div>
+        <div class="level-dots">
+          <span class="level-dot" data-level="1">1</span>
+          <span class="level-dot" data-level="2">2</span>
+          <span class="level-dot" data-level="3">3</span>
+        </div>
+      </div>
+
+    </div><!-- /world-map-container -->
+  </div>
+</div><!-- /screen-worldmap -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 5 — GAME BATTLE
+═══════════════════════════════════════════════════ -->
+<div id="screen-game" class="screen">
+
+  <!-- ── TOP HUD ──────────────────────────────────── -->
+  <div class="game-hud" role="banner">
+
+    <!-- Player 1 HUD -->
+    <div class="hud-player p1-hud" id="hud-p1"
+         aria-label="Player 1 status">
+      <div class="hud-avatar" id="hud-p1-avatar"
+           aria-hidden="true">🧑‍🎓</div>
+      <div class="hud-info">
+        <div class="hud-name"  id="hud-p1-name">Player 1</div>
+        <div class="hud-score" id="hud-p1-score"
+             aria-label="Player 1 score">0</div>
+      </div>
+      <div class="hud-hearts" id="hud-p1-hearts"
+           aria-label="Player 1 hearts">❤️❤️❤️</div>
+      <div class="hud-powerups" id="hud-p1-powerups"
+           role="group" aria-label="Player 1 power-ups">
+        <button class="pu-btn"
+                data-pu="freeze" data-player="1"
+                title="Time Freeze — +15 seconds"
+                aria-label="Time Freeze power-up">⏰</button>
+        <button class="pu-btn"
+                data-pu="hint" data-player="1"
+                title="Hint — Eliminate 2 wrong answers"
+                aria-label="Hint power-up">💡</button>
+        <button class="pu-btn"
+                data-pu="double" data-player="1"
+                title="Double Down — Double your points"
+                aria-label="Double Down power-up">💣</button>
+        <button class="pu-btn"
+                data-pu="shield" data-player="1"
+                title="Shield — Block next heart loss"
+                aria-label="Shield power-up">🛡️</button>
+      </div>
+    </div>
+
+    <!-- Middle HUD -->
+    <div class="hud-middle">
+      <div class="turn-indicator" id="turn-indicator"
+           aria-live="polite">P1's Turn</div>
+      <div class="round-counter" id="round-counter">Q 1/10</div>
+      <div class="world-indicator" id="world-indicator">🌱 World 1</div>
+    </div>
+
+    <!-- Player 2 HUD -->
+    <div class="hud-player p2-hud" id="hud-p2"
+         aria-label="Player 2 status">
+      <div class="hud-powerups" id="hud-p2-powerups"
+           role="group" aria-label="Player 2 power-ups">
+        <button class="pu-btn"
+                data-pu="freeze" data-player="2"
+                title="Time Freeze — +15 seconds"
+                aria-label="Time Freeze power-up">⏰</button>
+        <button class="pu-btn"
+                data-pu="hint" data-player="2"
+                title="Hint — Eliminate 2 wrong answers"
+                aria-label="Hint power-up">💡</button>
+        <button class="pu-btn"
+                data-pu="double" data-player="2"
+                title="Double Down — Double your points"
+                aria-label="Double Down power-up">💣</button>
+        <button class="pu-btn"
+                data-pu="shield" data-player="2"
+                title="Shield — Block next heart loss"
+                aria-label="Shield power-up">🛡️</button>
+      </div>
+      <div class="hud-hearts" id="hud-p2-hearts"
+           aria-label="Player 2 hearts">❤️❤️❤️</div>
+      <div class="hud-info">
+        <div class="hud-name"  id="hud-p2-name">Player 2</div>
+        <div class="hud-score" id="hud-p2-score"
+             aria-label="Player 2 score">0</div>
+      </div>
+      <div class="hud-avatar" id="hud-p2-avatar"
+           aria-hidden="true">👩‍🏫</div>
+    </div>
+
+  </div><!-- /game-hud -->
+
+  <!-- ── TIMER BAR ────────────────────────────────── -->
+  <div class="timer-container" role="timer" aria-label="Time remaining">
+    <div class="timer-bar">
+      <div class="timer-fill" id="timer-fill"></div>
+    </div>
+    <div class="timer-text" id="timer-text" aria-live="off">30</div>
+  </div>
+
+  <!-- ── STREAK BANNER ────────────────────────────── -->
+  <div class="streak-banner hidden"
+       id="streak-banner"
+       aria-live="polite"
+       role="status">
+    🔥 <span id="streak-count">3</span>× Streak! Bonus active!
+  </div>
+
+  <!-- ── QUESTION AREA ────────────────────────────── -->
+  <div class="question-container" id="question-container">
+
+    <!-- Question meta -->
+    <div class="question-meta">
+      <span class="q-type-badge"   id="q-type-badge">Proportion</span>
+      <span class="q-points-badge" id="q-points-badge">+100 pts</span>
+    </div>
+
+    <!-- Question box -->
+    <div class="question-box" id="question-box"
+         role="main" aria-live="polite">
+      <p id="question-text">Get ready…</p>
+
+      <!-- Table (shown for table-type questions) -->
+      <div class="q-table-wrapper hidden" id="q-table-wrapper">
+        <table class="q-table" id="q-table"
+               aria-label="Proportion table">
+          <thead>
+            <tr id="q-table-head"></tr>
+          </thead>
+          <tbody id="q-table-body"></tbody>
+        </table>
+      </div>
+
+      <!-- Formula display -->
+      <div class="q-formula hidden" id="q-formula"
+           aria-label="Equation"></div>
+    </div>
+
+    <!-- Answer options -->
+    <div class="answers-grid" id="answers-grid"
+         role="group" aria-label="Answer choices">
+      <button class="answer-btn" id="ans-a" data-index="0">
+        A. —
+      </button>
+      <button class="answer-btn" id="ans-b" data-index="1">
+        B. —
+      </button>
+      <button class="answer-btn" id="ans-c" data-index="2">
+        C. —
+      </button>
+      <button class="answer-btn" id="ans-d" data-index="3">
+        D. —
+      </button>
+    </div>
+
+    <!-- Explanation (shown after answer selected) -->
+    <div class="explanation-box hidden"
+         id="explanation-box"
+         role="region"
+         aria-label="Answer explanation"
+         aria-live="polite">
+      <div class="exp-header">
+        <span id="exp-result-icon">✅</span>
+        <span id="exp-result-text">Correct!</span>
+      </div>
+      <div class="exp-steps" id="exp-steps"></div>
+      <button class="btn btn-primary"
+              id="btn-next-question"
+              style="width:100%;margin-top:8px;">
+        Next Question →
+      </button>
+    </div>
+
+  </div><!-- /question-container -->
+
+
+  <!-- ── SPIN WHEEL OVERLAY ─────────────────────── -->
+<div class="wheel-overlay hidden"
+     id="wheel-overlay"
+     role="dialog"
+     aria-modal="true"
+     aria-label="Spin the wheel for your question type">
+
+  <div class="wheel-modal">
+
+    <h3>🎡 Spin for Question Type!</h3>
+
+    <div class="wheel-container">
+      <!-- Pointer is ABOVE the wheel, fixed -->
+      <div class="wheel-pointer" aria-hidden="true">▼</div>
+
+      <!-- The spinning disc — labels injected by JS -->
+      <div class="wheel" id="spin-wheel" aria-hidden="true">
+        <!-- Labels added dynamically by buildWheel() -->
+      </div>
+    </div>
+
+    <!-- Shows which type was landed on -->
+    <div class="wheel-result" id="wheel-result">
+      Tap SPIN to begin!
+    </div>
+
+    <!-- Single button: changes state (Spin → Go!) -->
+    <button class="btn btn-primary btn-xl"
+            id="btn-spin">
+      🎡 SPIN!
+    </button>
+
+  </div>
+</div><!-- /wheel-overlay -->
+
+</div><!-- /screen-game -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 6 — MINI-GAME INTERLUDE
+═══════════════════════════════════════════════════ -->
+<div id="screen-minigame" class="screen">
+  <div class="screen-header">
+    <h2 id="minigame-title">⚡ Mini Challenge!</h2>
+  </div>
+  <div id="minigame-container" style="flex:1;overflow-y:auto;">
+    <!-- Dynamically filled by ui.js -->
+  </div>
+</div><!-- /screen-minigame -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 7 — LEVEL COMPLETE
+═══════════════════════════════════════════════════ -->
+<div id="screen-levelcomplete" class="screen">
+  <div class="levelcomplete-content">
+
+    <!-- Fireworks canvas area -->
+    <div class="lc-fireworks"
+         id="lc-fireworks"
+         aria-hidden="true"></div>
+
+    <div class="lc-trophy" aria-hidden="true">🏆</div>
+
+    <h2 class="lc-title" id="lc-title">Level Complete!</h2>
+
+    <div class="lc-stars" id="lc-stars" aria-label="Stars earned">
+      ⭐⭐⭐
+    </div>
+
+    <!-- Score cards -->
+    <div class="lc-scores">
+
+      <div class="lc-score-card p1-card">
+        <div class="lc-avatar" id="lc-p1-avatar"
+             aria-hidden="true">🧑‍🎓</div>
+        <div class="lc-player-name" id="lc-p1-name">Player 1</div>
+        <div class="lc-player-score" id="lc-p1-score"
+             aria-label="Player 1 final score">0</div>
+        <div class="lc-badge" id="lc-p1-badge"></div>
+      </div>
+
+      <div class="lc-vs" aria-hidden="true">VS</div>
+
+      <div class="lc-score-card p2-card">
+        <div class="lc-avatar" id="lc-p2-avatar"
+             aria-hidden="true">👩‍🏫</div>
+        <div class="lc-player-name" id="lc-p2-name">Player 2</div>
+        <div class="lc-player-score" id="lc-p2-score"
+             aria-label="Player 2 final score">0</div>
+        <div class="lc-badge" id="lc-p2-badge"></div>
+      </div>
+
+    </div>
+
+    <!-- Concept summary -->
+    <div class="lc-concept-summary"
+         id="lc-concept-summary"
+         aria-label="Key concept reviewed">
+      <!-- Filled by ui.js -->
+    </div>
+
+    <!-- Action buttons -->
+    <div class="lc-buttons">
+      <button class="btn btn-secondary" id="btn-retry-level">
+        🔄 Retry
+      </button>
+      <button class="btn btn-primary" id="btn-next-level">
+        Next Level →
+      </button>
+    </div>
+
+    <button class="btn btn-ghost"
+            id="btn-back-to-map"
+            style="width:100%;margin-top:8px;">
+      🗺️ World Map
+    </button>
+
+  </div>
+</div><!-- /screen-levelcomplete -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCREEN 8 — LEADERBOARD
+═══════════════════════════════════════════════════ -->
+<div id="screen-leaderboard" class="screen">
+  <div class="screen-header">
+    <button class="btn-back" id="btn-back-lb">← Back</button>
+    <h2>🏆 Leaderboard</h2>
+  </div>
+
+  <div class="scroll-content">
+    <div class="lb-tabs" role="tablist">
+      <button class="lb-tab active"
+              data-tab="session"
+              role="tab"
+              aria-selected="true">
+        This Session
+      </button>
+      <button class="lb-tab"
+              data-tab="alltime"
+              role="tab"
+              aria-selected="false">
+        All Time
+      </button>
+    </div>
+
+    <div id="lb-list"
+         class="lb-list"
+         role="list"
+         aria-label="Leaderboard entries">
+      <!-- Filled by players.js -->
+    </div>
+  </div>
+</div><!-- /screen-leaderboard -->
+
+
+<!-- ═══════════════════════════════════════════════════
+     GLOBAL OVERLAYS
+     (outside screen divs so they layer above everything)
+═══════════════════════════════════════════════════ -->
+
+<!-- Celebration overlay (confetti + message) -->
+<div class="celebration-overlay hidden"
+     id="celebration-overlay"
+     aria-live="assertive"
+     role="alert">
+  <div class="confetti-container"
+       id="confetti-container"
+       aria-hidden="true"></div>
+  <div class="celebration-text"
+       id="celebration-text">🎉 Correct! 🎉</div>
+</div>
+
+<!-- Wrong answer red flash -->
+<div class="wrong-flash hidden"
+     id="wrong-flash"
+     aria-live="assertive"
+     role="alert">
+  <div class="wrong-text">❌ Not quite! Keep going!</div>
+</div>
+
+<!-- Power-up / toast notification -->
+<div class="powerup-toast hidden"
+     id="powerup-toast"
+     role="status"
+     aria-live="polite">
+  <span id="powerup-toast-text">⏰ Time Freeze Activated!</span>
+</div>
+
+<!-- Math tip bubble -->
+<div class="tip-bubble hidden"
+     id="tip-bubble"
+     role="complementary"
+     aria-label="Math tip">
+  <div class="tip-header">💡 Math Tip</div>
+  <div class="tip-text" id="tip-text"></div>
+  <button class="tip-close" id="tip-close">Got it! ✓</button>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     SCRIPTS — loaded in dependency order
+═══════════════════════════════════════════════════ -->
+
+<!-- 1. State (no deps) -->
+<script src="js/gameState.js"></script>
+
+<!-- 2. Data (no deps) -->
+<script src="data/questions.js"></script>
+
+<!-- 3. Players (needs GameState) -->
+<script src="js/players.js"></script>
+
+<!-- 4. Animations (needs GameState) -->
+<script src="js/animations.js"></script>
+
+<!-- 5. Question Engine (needs GameState, QuestionBank,
+                         Players, Animations) -->
+<script src="js/questionEngine.js"></script>
+
+<!-- 6. UI (needs all of the above) -->
+<script src="js/ui.js"></script>
+
+<!-- 7. Main — boots everything last -->
+<script src="js/main.js"></script>
+
+<!-- Boot loader hide — runs after all scripts load -->
+<script>
+  window.addEventListener('load', function () {
+    var loader = document.getElementById('boot-loader');
+    if (loader) {
+      loader.classList.add('fade-out');
+      setTimeout(function () {
+        loader.style.display = 'none';
+      }, 600);
+    }
+  });
+</script>
+
+</body>
+</html>
